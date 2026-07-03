@@ -18,7 +18,7 @@ class productController {
             })
             return
         }
-        await Product.create({
+        const product= await Product.create({
             productName,
             productDescription,
             productPrice,
@@ -28,7 +28,8 @@ class productController {
             productImageUrl : filename
         })
         res.status(200).json({
-            message : "Product Added Successfully!"
+            message : "Product Added Successfully!",
+            data: product
         })
     }
 

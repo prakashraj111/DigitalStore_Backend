@@ -27,7 +27,9 @@ function startServer() {
         onlineUsers.push({socketId,userId,role})
     }
     io.on("connection", (socket) => {
-        const token  = socket.handshake.headers.token // jwt token
+        console.log("connected")
+        const {token} = socket.handshake.auth // jwt token 
+        console.log(token,"TOKEN")
         if (token) {
             jwt.verify(
                 token as string,
@@ -44,15 +46,18 @@ function startServer() {
                         return
                     }
                   //userId grab grnu pryo
+                   console.log(socket.id,result.userId,userData.role)
                   addToOnlineusers(socket.id,result.userId,userData.role)
                 }
             )
-        } else {
-            socket.emit("error", "Authentication token missing")
-        }
+            }else{
+                console.log("triggered")
+                socket.emit("error","Please provide token")
+            }
+            console.log(onlineUsers)
         socket.on("updateOrderStatus",async  (data)=> {
             const {status, orderId, userId} = data
-            const finduser = onlineUsers.find(user=> user.userId == userId)
+            const findUser = onlineUsers.find(user=> user.userId == userId)
             await Order.update(
                 {
                     orderStatus : status
@@ -63,8 +68,9 @@ function startServer() {
                 }
                } 
             )
-            if(finduser){
-                io.to(finduser.socketId).emit("success", "Order status updated")
+            if(findUser){
+                 console.log(findUser.socketId,"FS")
+                io.to(findUser.socketId).emit("statusUpdated",data)
             }else{
                 socket.emit("error", "User is not Online!")
             }

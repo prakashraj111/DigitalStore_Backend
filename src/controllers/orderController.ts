@@ -19,7 +19,6 @@ interface OrderRequest extends Request {
     }
 }
 
-
 class OrderWithPaymentId extends Order{
   declare paymentId : string | null 
 }
@@ -170,8 +169,37 @@ class OrderController {
       }
     }
 
+    async fetchAllOrders(req:OrderRequest,res:Response):Promise<void>{
+      
+      const orders = await Order.findAll({
+       
+        attributes : ["totalAmount","id","orderStatus"], 
+        include : {
+          model : Payment, 
+          attributes : ["paymentMethod", "paymentStatus"]
+        }
+      })
+      if(orders.length > 0){
+        res.status(200).json({
+          message : "Order fetched successfully", 
+          data : orders 
+        })
+      }else{
+        res.status(404).json({
+          message : "No order found", 
+          data : []
+        })
+      }
+    }
+
     async fetchMyOrderDetail(req:OrderRequest,res:Response):Promise<void>{
-      const orderId = req.params.id 
+      const orderId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      if (!orderId) {
+        res.status(400).json({
+          message: "Invalid order id"
+        })
+        return
+      }
       const orders = await OrderDetails.findAll({
         where : {
           orderId, 
@@ -185,7 +213,7 @@ class OrderController {
               attributes : ["paymentMethod","paymentStatus"]
             }
           ],
-          attributes : ["orderStatus","addressLine","city","state","totalAmount","phoneNumber"]
+          attributes : ["orderStatus","addressLine","city","state","totalAmount","phoneNumber", "firstName", "lastName","userId"]
         },{
           model : Product, 
           include : [{
@@ -209,7 +237,13 @@ class OrderController {
 
      async cancelMyOrder(req:OrderRequest,res:Response):Promise<void>{
       const userId = req.user?.id 
-      const orderId = req.params.id 
+      const orderId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      if (!orderId) {
+        res.status(400).json({
+          message: "Invalid order id"
+        })
+        return
+      }
       const [order] = await Order.findAll({
         where : {
           userId : userId, 
@@ -240,7 +274,7 @@ class OrderController {
     }
 
      async changeOrderStatus(req:OrderRequest,res:Response) : Promise<void>{
-      const orderId = req.params.id 
+      const orderId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const {orderStatus} = req.body
       if(!orderId || !orderStatus){
         res.status(400).json({
@@ -258,7 +292,13 @@ class OrderController {
     }
      async deleteOrder(req:OrderRequest, res:Response) : Promise<void>{
 
-      const orderId = req.params.id 
+      const orderId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      if (!orderId) {
+        res.status(400).json({
+          message: "Invalid order id"
+        })
+        return
+      }
       const order : OrderWithPaymentId= await Order.findByPk(orderId as string) as OrderWithPaymentId
       const paymentId = order?.paymentId
       if(!order){

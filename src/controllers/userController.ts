@@ -171,7 +171,7 @@ class UserController {
 
     }
 
-        static async fetchUsers(req:Request,res:Response){
+    static async fetchUsers(req:Request,res:Response){
         const users  = await User.findAll({
             attributes : ["id","username","email"]
         })
@@ -198,6 +198,9 @@ class UserController {
            
         })
     }
+
+    
+
 }
 
 

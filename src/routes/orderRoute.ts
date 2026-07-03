@@ -8,6 +8,8 @@ router.route("/")
     .post(userMiddleware.isUserLoggedIn, errorHandler(orderController.createOrder))
     .get(userMiddleware.isUserLoggedIn, userMiddleware.accessTo(Role.Customer), errorHandler(orderController.fetchMyOrders))
 
+router.route("/all").get(userMiddleware.isUserLoggedIn,userMiddleware.accessTo(Role.Admin), errorHandler(orderController.fetchAllOrders))
+
 router.route("/:id")
     .get(userMiddleware.isUserLoggedIn, errorHandler(orderController.fetchMyOrderDetail))
     
